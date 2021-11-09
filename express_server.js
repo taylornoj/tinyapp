@@ -25,7 +25,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls/new", (req, res) => {
+app.get("/urls/new", (req, res) => { //template vars are not being handed down
   res.render("urls_new");
 });
 
@@ -40,6 +40,12 @@ app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const templateVars = { shortURL, longURL: urlDatabase[shortURL] };
   res.render("urls_show", templateVars);
+});
+////
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
 });
 
 app.get("/u/:shortURL", (req, res) => {
