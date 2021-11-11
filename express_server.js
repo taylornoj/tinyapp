@@ -27,6 +27,15 @@ const users = {
   }
 }
 
+const emailLookupError = function(email, userDB) {
+  for (const user in userDB) {
+    if (userDB[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+}
+
 app.get("/", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -99,17 +108,20 @@ app.post("/register", (req, res) => {
 
   if (!enteredEmail || !enteredPassword) {
     res.status(400).send("400: Invalid email/password");
-  }
+  } else if (emailLookupError(enteredEmail, users)) {
+    res.status(400).send("400: Account already exists");
+  } else {
   const user = {
     id: generateRandomString(),
     email: req.body.email,
     password: req.body.password,
   };
   users[user.id] = user;
-  //console.log(users);
+  console.log(users);
   res.cookie("user", user);
   //console.log(user);
   res.redirect('/urls');
+}
 });
 
 app.post("/login", (req, res) => {
