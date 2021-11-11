@@ -3,16 +3,17 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const PORT = 8080;
 
-
+// MIDDLEWARE
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set("view engine", "ejs");
 
+// DATABASES
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    uderID: "aJ48lW"
+    userID: "aJ48lW"
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
@@ -176,10 +177,21 @@ app.post("/logout", (req, res) => {
   res.redirect('urls');
 });
 
+
+
+
 app.get("/u/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    res.status(404).send("404: Page Not Found");
+  } else {
+// if url does not exist return res.status(404).send("404: ")
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
+  }
 });
+
+
+
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
