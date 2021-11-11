@@ -27,14 +27,6 @@ const users = {
   }
 }
 
-// const emailLookupError = function(email, userDB) {
-//   for (let user in userDB) {
-//     if (userDB[user].email === email) {
-//       return true;
-//     }
-//   }
-//   return false;
-// }
 const emailInUsers = (email) => {
   for (id in users) {
     if (users[id].email === email) {
@@ -44,22 +36,11 @@ const emailInUsers = (email) => {
   return false;
 };
 
-const existingPassword = (password, email) => {
-  const id = emailInUsers(email);
-  if (!id) {
-    return false;
-  }
-  if (users[id].password === password) {
-    return id;
-  }
-  return false;
-};
-
-
 app.get("/", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: req.cookies["user_id"]
+    user_id: req.cookies["user_id"], 
+    users
   };
   res.render("urls_index", templateVars);
 });
@@ -71,14 +52,17 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    user: req.cookies["user_id"], 
+    user_id: req.cookies["user_id"], 
+    users
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => { //template vars are not being handed down
   const templateVars = {
-    user: req.cookies["user_id"],
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    users
   };
   res.render("urls_new", templateVars);
 });
@@ -93,9 +77,9 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const templateVars = { 
-    shortURL, 
-    longURL: urlDatabase[shortURL],
-    user: req.cookies["user_id"]
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"], 
+    users
    };
   res.render("urls_show", templateVars);
 });
@@ -116,7 +100,9 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: req.cookies["user_id"],
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"], 
+    users
   }
   res.render("urls_registration", templateVars);
 });
@@ -138,35 +124,36 @@ app.post("/register", (req, res) => {
   };
   users[user.id] = user;
   console.log(users);
-  res.cookie("user_id", user);
+  res.cookie("user_id", user.id);
   res.redirect('/urls');
 }
 });
 
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const userId = emailInUsers(email);
-  if (!userId) {
+  const enteredEmail = req.body.email;
+  const enteredPassword = req.body.password;
+  if (!enteredEmail) { //if no email is entered.  // "user@example.com"
     return res.status(403).send("403: Email not found");
+  } else if (emailInUsers(enteredEmail, users)) { // if email matches our records, returns "user/key which has the same value as the user.id" 
+    const user = emailInUsers(enteredEmail, users);
+    if (enteredPassword !== users[user].password) {
+      return res.status(403).send("403: Invalid Username/Password");
+    } else {
+      res.cookie("user_id", user);
+      res.redirect('/urls');
+    }
+  } else {
+    return res.status(400).send("Email not found")
   }
-  if (!existingPassword(password, email)) {
-    return res.status(403).send("403: Invalid username/password");
-  }
-  res.cookie("user_id", userId);
-  res.redirect('/urls');
 });
 
 app.get("/login", (req, res) => {
-  const userId = req.cookies["user_id"];
-  if(userId) {
-    res.redirect("/urls");
-  }
   const templateVars = {
-    user: null,
-  };
-  
-  res.render("urls_login", templateVars);
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"], 
+    users
+  }
+  res.render("urls_login", templateVars)
 });
 
 app.post("/logout", (req, res) => {
