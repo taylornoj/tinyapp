@@ -119,7 +119,6 @@ app.post("/register", (req, res) => {
   users[user.id] = user;
   console.log(users);
   res.cookie("user", user);
-  //console.log(user);
   res.redirect('/urls');
 }
 });
@@ -129,7 +128,13 @@ app.post("/login", (req, res) => {
   res.redirect('/urls');
 });
 
-//
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: req.cookies["user"],
+  }
+  res.render("urls_login", templateVars);
+});
+
 app.post("/logout", (req, res) => {
   res.clearCookie('user', req.body.user);
   res.redirect('urls');
