@@ -34,6 +34,7 @@ const users = {
   }
 };
 
+// HELPER FUNCTIONS
 const emailInUsers = (email) => {
   for (id in users) {
     if (users[id].email === email) {
@@ -43,12 +44,25 @@ const emailInUsers = (email) => {
   return false;
 };
 
+const urlsForUser = (id) => {
+  let userShortUrl = {};
+  for (let url in urlDatabase) {
+    if (id === urlDatabase[url].userID) {
+      userShortUrl[url] = urlDatabase[url];
+    }
+  }
+  return userShortUrl;
+}
+
+
 app.get("/", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user_id: req.cookies["user_id"],
     users
   };
+
+  console.log("usercookieid", templateVars.user_id);
   res.render("urls_index", templateVars);
 });
 
@@ -56,14 +70,21 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+
+
 app.get("/urls", (req, res) => {
+
+  const userShortUrl = urlsForUser(req.cookies["user_id"])
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: userShortUrl,     //////urlDatabase
     user_id: req.cookies["user_id"],
     users
   };
+  
   res.render("urls_index", templateVars);
 });
+
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
