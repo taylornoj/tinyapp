@@ -61,8 +61,7 @@ app.get("/", (req, res) => {
     user_id: req.cookies["user_id"],
     users
   };
-
-  console.log("usercookieid", templateVars.user_id);
+  //console.log("usercookieid", templateVars.user_id);
   res.render("urls_index", templateVars);
 });
 
@@ -111,15 +110,25 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  //const shortURL = req.params.shortURL;
+  const shortURL = req.params.shortURL;
+  let haveAccess = false;
+  const user_id = req.cookies["user_id"]
+  if (urlDatabase[shortURL].userID === user_id) {
+    haveAccess = true;
+
+  }
+  console.log(shortURL);
   const templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
+    longURL: urlDatabase[shortURL].longURL,
     user_id: req.cookies["user_id"],
-    users
+    users,  
+    haveAccess
   };
   res.render("urls_show", templateVars);
 });
+
+
 
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
@@ -127,6 +136,10 @@ app.post("/urls/:id", (req, res) => {
   urlDatabase[shortURL] = longURL;
   res.redirect('/urls');
 });
+
+
+
+
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
