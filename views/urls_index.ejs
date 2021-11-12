@@ -12,7 +12,7 @@
   <%- include('partials/_header') %>
   <main style="margin: 1em;">
 
-    <% if (user_id === undefined) { %>
+    <% if (!user) { %>
       <p>You are not logged in. Please continue to Login page or Register an account.</p> 
     <% } else { %>
       

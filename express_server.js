@@ -28,20 +28,20 @@ const urlDatabase = {
     userID: "aJ48lW"
   }
 };
-
+// console.log("==========", urlDatabase["b2xVn2"]);
 const users = {
   "userRandomID": {
     id: "userRandomID",
-    email: "user@example.com",
-    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
+    email: "a@a.com",
+    password: bcrypt.hashSync("123", 10)
   },
   "user2RandomID": {
     id: "user2RandomID",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("dishwasher-funk", 10)
+    email: "b@b.com",
+    password: bcrypt.hashSync("123", 10)
   }
 };
-
+// console.log("==========", users["userRandomID"]);
 // --- HELPER FUNCTIONS
 function generateRandomString() {
   let result = '';
@@ -85,23 +85,26 @@ app.get("/", (req, res) => {
 
 // --- URL LIST
 app.get("/urls", (req, res) => {
-  const userShortUrl = urlsForUser(req.session) 
-  console.log(users);         //req.cookies);   ////////**** 
+  console.log("+++++++", urlDatabase);
+  const userId = req.session.user_id;
+  const user = users[userId];
+  const userShortUrl = urlsForUser(userId) 
+  // console.log(users);         //req.cookies);   ////////**** 
   const templateVars = {
     urls: userShortUrl,     //urlDatabase
     user_id: req.session.user_id,
-    useremail: req.session.user_id && users[req.session.user_id ] ? users[req.session.user_id ].email: '',                    //req.cookies["user_id"],
-    users
+    user
   };
   res.render("urls_index", templateVars);
 });
 
 // --- CREATE URL
 app.get("/urls/new", (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
   const templateVars = {
-    urls: urlDatabase,
-    user_id: req.session.user_id,                  //req.cookies["user_id"],
-    users
+    urls: urlDatabase,            
+    user
   };
   res.render("urls_new", templateVars);
 });
@@ -123,22 +126,30 @@ app.post("/urls", (req, res) => {
 
 // --- TINY W/ EDIT
 app.get("/urls/:shortURL", (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
   const shortURL = req.params.shortURL;
+  const urlObject = urlDatabase[shortURL];
   let haveAccess = false;
+  if (!urlObject) {
+    console.log("invalid shortURL");
+    return res.send("invalid shortURL");
+  }
 
-  const user_id = req.session.user_id;                     //req.cookies["user_id"];
-  if (urlDatabase[shortURL].userID === user_id) {
-    haveAccess = true;
+  if (urlObject.userID !== userId) {
+    console.log("This object belongs to another user");
+    return res.send("This object belongs to another user");
+  }
+                     
+  if (urlObject.userID === userId) {
+    const templateVars = {
+      shortURL,
+      longURL: urlObject.longURL,     
+      user
+    };
+    res.render("urls_show", templateVars);
   }
   console.log(shortURL);
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[shortURL].longURL,
-    user_id: req.session.user_id,                     //req.cookies["user_id"],
-    users,  
-    haveAccess
-  };
-  res.render("urls_show", templateVars);
 });
 
 // EDIT 
@@ -171,9 +182,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // --- REGISTER PAGE - EJS FILE
 app.get("/register", (req, res) => {
   const templateVars = {
-    urls: urlDatabase,
-    user_id: req.session.user_id,                  //req.cookies["user_id"],
-    users
+    user: null
   };
   res.render("urls_registration", templateVars);
 });
@@ -224,10 +233,7 @@ app.post("/login", (req, res) => {
 // --- LOGIN PAGE - EJS FILE
 app.get("/login", (req, res) => {
   const templateVars = {
-    urls: urlDatabase,
-    user_id: req.session.user_id,
-    useremail: '',                //req.cookies["user_id"],
-    users
+    user: null
   };
   res.render("urls_login", templateVars);
 });
@@ -260,4 +266,3 @@ app.get("/hello", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
