@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcryptjs');
 const PORT = 8080;
 
 // --- MIDDLEWARE
@@ -168,10 +169,12 @@ app.get("/register", (req, res) => {
   res.render("urls_registration", templateVars);
 });
 
-// --- REGISTER W/ ERROR MESSAGES
+// --- REGISTER W/ ERROR MESSAGES & BCRYPT APPLIED
 app.post("/register", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, 10);
+
 
   if (!enteredEmail || !enteredPassword) {
     res.status(400).send("400: Invalid email/password");
@@ -181,7 +184,7 @@ app.post("/register", (req, res) => {
     const user = {
       id: generateRandomString(),
       email: req.body.email,
-      password: req.body.password,
+      password,
     };
     users[user.id] = user;
     console.log(users);
@@ -190,22 +193,20 @@ app.post("/register", (req, res) => {
 }
 });
 
-// --- LOGIN W/ ERROR MESSAGES
+// --- LOGIN W/ ERROR MESSAGES & BCRYPT APPLIED
 app.post("/login", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
   if (!enteredEmail) {
     return res.status(403).send("403: Email not found");
-  } else if (emailInUsers(enteredEmail, users)) {
-    const user = emailInUsers(enteredEmail, users);
-    if (enteredPassword !== users[user].password) {
+  } else {
+    const userID = emailInUsers(enteredEmail, users);
+    if (!bcrypt.compareSync(enteredPassword, users[userID]["password"])) {
       return res.status(403).send("403: Invalid Username/Password");
     } else {
-      res.cookie("user_id", user);
+      res.cookie("user_id", userID);
       res.redirect('/urls');
     }
-  } else {
-    return res.status(400).send("Email not found");
   }
 });
 
