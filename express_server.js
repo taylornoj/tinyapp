@@ -3,13 +3,13 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const PORT = 8080;
 
-// MIDDLEWARE
+// --- MIDDLEWARE
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set("view engine", "ejs");
 
-// DATABASES
+// --- DATABASES
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
@@ -34,7 +34,16 @@ const users = {
   }
 };
 
-// HELPER FUNCTIONS
+// --- HELPER FUNCTIONS
+function generateRandomString() {
+  let result = '';
+  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+  while (result.length < 6) {
+   result += characters.charAt(Math.floor(Math.random() * 62));
+  }
+  return result;
+};
+
 const emailInUsers = (email) => {
   for (id in users) {
     if (users[id].email === email) {
@@ -52,9 +61,9 @@ const urlsForUser = (id) => {
     }
   }
   return userShortUrl;
-}
+};
 
-
+// --- ROOT
 app.get("/", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -65,26 +74,19 @@ app.get("/", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
 
-
-
+// --- URL LIST
 app.get("/urls", (req, res) => {
-
   const userShortUrl = urlsForUser(req.cookies["user_id"])
-
   const templateVars = {
-    urls: userShortUrl,     //////urlDatabase
+    urls: userShortUrl,     //urlDatabase
     user_id: req.cookies["user_id"],
     users
   };
-  
   res.render("urls_index", templateVars);
 });
 
-
+// --- CREATE URL
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -94,6 +96,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+// --- TINYURL
 app.post("/urls", (req, res) => {
   console.log(req.body);
   if (!req.cookies.user_id) {
@@ -104,18 +107,18 @@ app.post("/urls", (req, res) => {
     urlDatabase[shortString] = {};
     urlDatabase[shortString].longURL = req.body.longURL;
     urlDatabase[shortString].userID = req.cookies["user_id"];
-
   res.redirect(`/urls/${shortString}`);
   }
 });
 
+// --- TINY W/ EDIT
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   let haveAccess = false;
+
   const user_id = req.cookies["user_id"]
   if (urlDatabase[shortURL].userID === user_id) {
     haveAccess = true;
-
   }
   console.log(shortURL);
   const templateVars = {
@@ -128,26 +131,34 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-
-
+// EDIT 
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = req.body.newURL;
-  urlDatabase[shortURL] = longURL;
+
+  const userid = req.cookies["user_id"];
+  if(urlDatabase[shortURL].userID !== userid) {
+    return res.status(400).send("Denied");
+  } 
+  urlDatabase[shortURL] = {
+    longURL,
+    userID: req.cookies["user_id"]
+  };
   res.redirect('/urls');
 });
 
-
-
-
-
+// --- DELETE FUNCTION
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
+  const userid = req.cookies["user_id"];
+  if(urlDatabase[shortURL].userID !== userid) {
+    return res.status(400).send("Denied Permissions to Delete");
+  }
   delete urlDatabase[shortURL];
   res.redirect('/urls');
 });
 
-
+// --- REGISTER PAGE - EJS FILE
 app.get("/register", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -157,7 +168,7 @@ app.get("/register", (req, res) => {
   res.render("urls_registration", templateVars);
 });
 
-//
+// --- REGISTER W/ ERROR MESSAGES
 app.post("/register", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
@@ -179,6 +190,7 @@ app.post("/register", (req, res) => {
 }
 });
 
+// --- LOGIN W/ ERROR MESSAGES
 app.post("/login", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
@@ -197,6 +209,7 @@ app.post("/login", (req, res) => {
   }
 });
 
+// --- LOGIN PAGE - EJS FILE
 app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -206,26 +219,25 @@ app.get("/login", (req, res) => {
   res.render("urls_login", templateVars);
 });
 
+// --- LOGOUT WITH REDIRECT
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id', req.body.user);
   res.redirect('urls');
 });
 
-
-
-
+// --- REPONSE TO /u/TINYURL SHORTURL
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL] === undefined) {
     res.status(404).send("404: Page Not Found");
   } else {
-// if url does not exist return res.status(404).send("404: ")
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
   }
 });
 
-
-
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
@@ -235,11 +247,3 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-function generateRandomString() {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
-  while (result.length < 6) {
-   result += characters.charAt(Math.floor(Math.random() * 62));
-  }
-  return result;
-}
