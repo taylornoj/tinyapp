@@ -1,18 +1,17 @@
-// --- HELPER FUNCTIONS
 const bcrypt = require('bcryptjs');
 
 const users = {
-    "userRandomID": {
-      id: "userRandomID",
-      email: "a@a.com",
-      password: bcrypt.hashSync("123", 10)
-    },
-    "user2RandomID": {
-      id: "user2RandomID",
-      email: "b@b.com",
-      password: bcrypt.hashSync("123", 10)
-    }
+  "userRandomID": {
+    id: "userRandomID",
+    email: "a@a.com",
+    password: bcrypt.hashSync("123", 10)
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "b@b.com",
+    password: bcrypt.hashSync("1234", 10)
   }
+};
 
 const urlDatabase = {
   "b2xVn2": {
@@ -29,18 +28,18 @@ function generateRandomString() {
   let result = '';
   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
   while (result.length < 6) {
-   result += characters.charAt(Math.floor(Math.random() * 62));
+    result += characters.charAt(Math.floor(Math.random() * 62));
   }
   return result;
-};
+}
 
-const emailInUsers = (email, users) => {
-  for (id in users) {
-    if (users[id].email === email) {
-      return users[id];
+const getUserByEmail = function(email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      return user;
     }
   }
-  return false;
+  return undefined;
 };
 
 const urlsForUser = (id) => {
@@ -53,4 +52,4 @@ const urlsForUser = (id) => {
   return userShortUrl;
 };
 
-module.exports = { generateRandomString, emailInUsers, urlsForUser, urlDatabase, users };
+module.exports = { generateRandomString, getUserByEmail, urlsForUser, urlDatabase, users };
