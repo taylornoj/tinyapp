@@ -8,6 +8,8 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        </div>
+        </div>
         <% if(user) { %>
           <form method="POST" class="form-inline" action="/logout">
               <label style="width: 200px; margin-left: 250px;">Logged In As: <%= user.email %></label>
@@ -25,7 +27,5 @@
         
 
         </form>
-      </div>
-    </div>
   </nav>
 </header>
