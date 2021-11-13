@@ -8,7 +8,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 !["Your Personalized List of Short URLs"](https://github.com/taylornoj/tinyapp/blob/master/docs/urls-page.png?raw=true)
 
-!["screenshot description"](#)
+!["Single Short URL Display"](https://github.com/taylornoj/tinyapp/blob/master/docs/urls-shortURL.png?raw=true)
 
 ## Dependencies
 
