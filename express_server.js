@@ -16,60 +16,60 @@ app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }))
-
+const { generateRandomString, urlsForUser, emailInUsers, urlDatabase, users } = require("./helpers");
 // --- DATABASES
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "aJ48lW"
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "aJ48lW"
-  }
-};
-// console.log("==========", urlDatabase["b2xVn2"]);
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "a@a.com",
-    password: bcrypt.hashSync("123", 10)
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "b@b.com",
-    password: bcrypt.hashSync("123", 10)
-  }
-};
-// console.log("==========", users["userRandomID"]);
-// --- HELPER FUNCTIONS
-function generateRandomString() {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
-  while (result.length < 6) {
-   result += characters.charAt(Math.floor(Math.random() * 62));
-  }
-  return result;
-};
+// const urlDatabase = {
+//   "b2xVn2": {
+//     longURL: "http://www.lighthouselabs.ca",
+//     userID: "aJ48lW"
+//   },
+//   "9sm5xK": {
+//     longURL: "http://www.google.com",
+//     userID: "aJ48lW"
+//   }
+// };
+// // console.log("==========", urlDatabase["b2xVn2"]);
+// const users = {
+//   "userRandomID": {
+//     id: "userRandomID",
+//     email: "a@a.com",
+//     password: bcrypt.hashSync("123", 10)
+//   },
+//   "user2RandomID": {
+//     id: "user2RandomID",
+//     email: "b@b.com",
+//     password: bcrypt.hashSync("123", 10)
+//   }
+// };
+// // console.log("==========", users["userRandomID"]);
+// // --- HELPER FUNCTIONS
+// function generateRandomString() {
+//   let result = '';
+//   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+//   while (result.length < 6) {
+//    result += characters.charAt(Math.floor(Math.random() * 62));
+//   }
+//   return result;
+// };
 
-const emailInUsers = (email) => {
-  for (id in users) {
-    if (users[id].email === email) {
-      return id;
-    }
-  }
-  return false;
-};
+// const emailInUsers = (email) => {
+//   for (id in users) {
+//     if (users[id].email === email) {
+//       return id;
+//     }
+//   }
+//   return false;
+// };
 
-const urlsForUser = (id) => {
-  let userShortUrl = {};
-  for (let url in urlDatabase) {
-    if (id === urlDatabase[url].userID) {
-      userShortUrl[url] = urlDatabase[url];
-    }
-  }
-  return userShortUrl;
-};
+// const urlsForUser = (id) => {
+//   let userShortUrl = {};
+//   for (let url in urlDatabase) {
+//     if (id === urlDatabase[url].userID) {
+//       userShortUrl[url] = urlDatabase[url];
+//     }
+//   }
+//   return userShortUrl;
+// };
 
 // --- ROOT
 app.get("/", (req, res) => {
@@ -87,8 +87,15 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   console.log("+++++++", urlDatabase);
   const userId = req.session.user_id;
+  if (!userId) {
+    res.redirect("/login");
+    return 
+  }
+  
+  console.log(userId);
   const user = users[userId];
   const userShortUrl = urlsForUser(userId) 
+  console.log(userShortUrl);
   // console.log(users);         //req.cookies);   ////////**** 
   const templateVars = {
     urls: userShortUrl,     //urlDatabase
@@ -218,7 +225,8 @@ app.post("/login", (req, res) => {
   if (!enteredEmail) {
     return res.status(403).send("403: Email not found");
   } else {
-    const userID = emailInUsers(enteredEmail, users);
+    const user = emailInUsers(enteredEmail, users);
+    const userID = user.id;
     console.log(userID);
     if (users[userID] && !bcrypt.compareSync(enteredPassword, users[userID]["password"])) {
       return res.status(403).send("403: Invalid Username/Password");
@@ -241,8 +249,8 @@ app.get("/login", (req, res) => {
 // --- LOGOUT WITH REDIRECT
 app.post("/logout", (req, res) => {
   req.session.user_id = null;
-  //res.clearCookie('user_id', req.body.user);             //
-  res.redirect('urls');
+  res.clearCookie('user_id');             //
+  res.redirect('/urls');
 });
 
 // --- REPONSE TO /u/TINYURL SHORTURL
