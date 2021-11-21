@@ -117,6 +117,9 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // --- REGISTER PAGE
 app.get("/register", (req, res) => {
+  if (req.session.user_id) {
+    return res.redirect('/urls');
+  }
   const templateVars = {
     user: null
   };
@@ -166,6 +169,9 @@ app.post("/login", (req, res) => {
 
 // --- LOGIN PAGE
 app.get("/login", (req, res) => {
+  if (req.session.user_id) {
+    return res.redirect('/urls');
+  }
   const templateVars = {
     user: null
   };
